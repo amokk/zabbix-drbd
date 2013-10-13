@@ -57,7 +57,7 @@ sub get_data {
         return $data;
     }
     # wtf why $mtimestamp = (stat($file))[9]; is not working ???
-    my $filestat = stat($file) or die "$!";
+    my $filestat = stat($file) || die "$!";
     my $mtimestamp = (defined(@$filestat[9]) ? @$filestat[9] : 0);
     if ((time - $mtimestamp) > $cacheexpire) {
         $data = read_proc();
@@ -68,8 +68,7 @@ sub get_data {
 }
 
 # caching is because we don't want to read /proc/drbd for every item
-# just to be sure that
-# and also cache file can be placed into tmpfs
+# cache file can be placed into tmpfs for better performance
 sub write_cache_file {
     my ($file,$data) = @_;
     open(FILE, ">$file") || die "Can not open: $!";
@@ -90,14 +89,13 @@ sub get_res_names {
 }
 
 sub read_proc {
-    my ($resid, $drbdversion);
-    open DRBD, $procdrbd or die "$!";
+    my ($resid);
+    open DRBD, $procdrbd || die "$!";
 
     while (<DRBD>) {
         chomp;
         # version: 8.3.13 (api:88/proto:86-96)
         if (m/^version/) {
-            ($drbdversion) = /^version: (.*)/;
             ($drbd{'version'}) = /^version: (.*)/;
             next;
         }
